@@ -1,8 +1,6 @@
 import carpenter/table
-import gleam/io
 import gleam/list
 import gleam/option
-import gleam/string
 import kv_sessions/session
 import kv_sessions/session_config
 
