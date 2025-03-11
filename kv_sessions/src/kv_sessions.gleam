@@ -1,6 +1,8 @@
+import carpenter/table
 import gleam/dict
-import gleam/dynamic.{type Decoder}
+import gleam/dynamic/decode.{type Decoder}
 import gleam/http/response
+import gleam/io
 import gleam/json
 import gleam/list
 import gleam/option
@@ -22,6 +24,7 @@ pub fn get_session(current_session: CurrentSession) {
     current_session.config.cookie_name,
     current_session.req,
   ))
+
   use maybe_session <- result.try(get_session_with_cache(
     session_id,
     current_session.config,
@@ -100,14 +103,14 @@ pub fn key(current_session: CurrentSession, key: String) {
   SessionKey(
     current_session:,
     key:,
-    decode: dynamic.string,
+    decode: decode.string,
     encode: fn(str: String) { json.string(str) |> json.to_string },
   )
 }
 
 pub fn with_codec(
   session_key: SessionKey(a),
-  decoder decode: dynamic.Decoder(data),
+  decoder decode: decode.Decoder(data),
   encoder encode: fn(data) -> String,
 ) -> SessionKey(data) {
   SessionKey(
@@ -122,10 +125,11 @@ pub fn with_codec(
 ///
 pub fn get(entry: SessionKey(data)) {
   use session <- result.try(get_session(entry.current_session))
+
   case dict.get(session.data, entry.key) |> option.from_result {
     option.None -> Ok(option.None)
     option.Some(data) -> {
-      json.decode(from: data, using: entry.decode)
+      json.parse(from: data, using: entry.decode)
       |> result.replace_error(session.DecodeError)
       |> result.map(fn(d) { option.Some(d) })
     }
@@ -220,4 +224,33 @@ pub fn middleware(
       }
     }
   }
+}
+
+pub fn test_carpenter() {
+  // Set up and configure an ETS table
+  let assert Ok(example) =
+    table.build("table_name")
+    |> table.privacy(table.Private)
+    |> table.write_concurrency(table.AutoWriteConcurrency)
+    |> table.read_concurrency(True)
+    |> table.decentralized_counters(True)
+    |> table.compression(False)
+    |> table.set
+
+  // Insert a value
+  example
+  |> table.insert([#("hello", "world")])
+
+  // Retrieve a key-value tuple
+  example
+  |> table.lookup("bye")
+  |> io.debug
+
+  // Delete an object
+  example
+  |> table.delete("hello")
+
+  // Delete a table
+  example
+  |> table.drop
 }

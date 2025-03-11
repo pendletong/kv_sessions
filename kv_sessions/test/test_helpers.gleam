@@ -2,7 +2,7 @@ import birl
 import birl/duration
 import gleam/bit_array
 import gleam/dict
-import gleam/dynamic
+import gleam/dynamic/decode.{type Decoder}
 import gleam/http/response
 import gleam/json
 import gleam/list
@@ -24,17 +24,14 @@ pub fn test_obj_to_json(obj: TestObj) {
   |> json.to_string
 }
 
-pub fn test_obj_from_json(json) {
-  dynamic.decode1(TestObj, dynamic.field("test_field", of: dynamic.string))(
-    json,
-  )
-}
-
 pub fn test_session_key(current_session: kv_sessions.CurrentSession) {
   current_session
   |> kv_sessions.key("test_key")
   |> kv_sessions.with_codec(
-    decoder: test_obj_from_json,
+    decoder: {
+      use test_field <- decode.field("test_field", decode.string)
+      decode.success(TestObj(test_field:))
+    },
     encoder: test_obj_to_json,
   )
 }
