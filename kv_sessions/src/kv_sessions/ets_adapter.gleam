@@ -1,6 +1,8 @@
 import carpenter/table
+import gleam/io
 import gleam/list
 import gleam/option
+import gleam/string
 import kv_sessions/session
 import kv_sessions/session_config
 
@@ -17,7 +19,7 @@ pub fn new_table(table_name) -> table.Set(String, session.Session) {
   // Set up and configure an ETS table
   let assert Ok(table) =
     table.build(table_name)
-    |> table.privacy(table.Private)
+    |> table.privacy(table.Public)
     |> table.write_concurrency(table.AutoWriteConcurrency)
     |> table.read_concurrency(True)
     |> table.decentralized_counters(True)
