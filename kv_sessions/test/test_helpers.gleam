@@ -2,7 +2,7 @@ import birl
 import birl/duration
 import gleam/bit_array
 import gleam/dict
-import gleam/dynamic/decode.{type Decoder}
+import gleam/dynamic/decode
 import gleam/http/response
 import gleam/json
 import gleam/list
